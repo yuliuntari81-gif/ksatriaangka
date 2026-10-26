@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Petualangan Angka 100.000 - Game Sensor Matematika Kelas 6 SD</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Tone.js untuk Efek Suara Tanpa File Eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        :root {
+            --font-title: 'Fredoka', sans-serif;
+            --font-body: 'Nunito', sans-serif;
+        }
+        body {
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            background: #0f172a;
+        }
+        h1, h2, h3, .font-title {
+            font-family: var(--font-title);
+        }
+        /* Animasi Melayang */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .animate-float-delay-1 {
+            animation: float 3.5s ease-in-out 0.5s infinite;
+        }
+        .animate-float-delay-2 {
+            animation: float 4s ease-in-out 1s infinite;
+        }
+        /* Efek Tombol Game 3D */
+        .btn-game {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 10px 15px rgba(0,0,0,0.2);
+        }
+        .btn-game:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25), 0 4px 6px rgba(0,0,0,0.2);
+        }
+        /* Kartu Jawaban Interaktif */
+        .answer-orb {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        }
+        .answer-orb.motion-active {
+            transform: scale(1.07);
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.9);
+        }
+        /* Video Mirror */
+        .mirror-video {
+            transform: scaleX(-1);
+        }
+        /* Scrollbar Kustom */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        /* Animasi Partikel Kilau */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+        .ring-effect::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 9999px;
+            border: 4px solid #facc15;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full text-white flex flex-col justify-between relative bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-900">
+
+    <!-- Latar Belakang Dekoratif -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
+        <div class="absolute top-10 left-10 text-7xl font-title text-yellow-400 animate-float">+</div>
+        <div class="absolute top-1/4 right-16 text-8xl font-title text-cyan-400 animate-float-delay-1">×</div>
+        <div class="absolute bottom-20 left-1/4 text-8xl font-title text-pink-400 animate-float-delay-2">÷</div>
+        <div class="absolute bottom-12 right-1/3 text-7xl font-title text-emerald-400 animate-float">−</div>
+    </div>
+
+    <!-- Top Navigation Bar / Audio & Camera Status -->
+    <header class="relative z-30 w-full px-4 py-2.5 bg-slate-900/70 backdrop-blur-md border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+            <span class="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-title font-bold px-3 py-1 rounded-full text-xs sm:text-sm shadow">
+                <i class="fa-solid fa-graduation-cap mr-1"></i> Kelas 6 SD - Fase C
+            </span>
+            <span id="sensor-badge" class="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 px-3 py-1 rounded-full text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Sensor Gerak Siap
+            </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Toggle Kamera Sensor -->
+            <button id="btn-toggle-cam" onclick="toggleCameraSensor()" class="btn-game bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-indigo-400/40" title="Aktifkan/Matikan Sensor Gerak Kamera">
+                <i id="cam-icon" class="fa-solid fa-video"></i>
+                <span id="cam-text" class="hidden md:inline">Sensor Kamera: Aktif</span>
+            </button>
+            <!-- Toggle Suara -->
+            <button id="btn-toggle-sound" onclick="toggleSound()" class="btn-game bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 border border-amber-300">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                <span id="sound-text" class="hidden md:inline">Suara</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="relative z-20 flex-1 flex items-center justify-center p-3 sm:p-6 w-full max-w-6xl mx-auto">
+
+        <!-- ==========================================
+             1. HALAMAN PEMBUKA / SPLASH SCREEN
+             ========================================== -->
+        <section id="screen-splash" class="w-full bg-slate-900/80 backdrop-blur-xl border-2 border-indigo-400/30 rounded-3xl p-5 sm:p-8 shadow-2xl text-center flex flex-col items-center justify-center transition-all">
+            
+            <!-- Baris Logo Resmi PGRI & Logo Pemkab Wonogiri -->
+            <div class="flex items-center justify-center gap-6 sm:gap-12 mb-5">
+                <!-- Logo Pemkab Wonogiri (Custom High-Detail SVG) -->
+                <div class="flex flex-col items-center group">
+                    <div class="w-20 h-24 sm:w-28 sm:h-32 bg-white/10 p-2 rounded-2xl border border-amber-400/40 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
+                        <svg viewBox="0 0 200 230" class="w-full h-full drop-shadow-md">
+                            <!-- Perisai Kuning Hitam -->
+                            <path d="M15,15 L185,15 L185,125 C185,175 100,218 100,218 C100,218 15,175 15,125 Z" fill="#facc15" stroke="#0f172a" stroke-width="8"/>
+                            <path d="M23,23 L177,23 L177,123 C177,168 100,208 100,208 C100,208 23,168 23,123 Z" fill="none" stroke="#0f172a" stroke-width="2"/>
+                            <!-- Segilima Merah Putih -->
+                            <polygon points="100,38 42,80 65,148 100,148" fill="#dc2626" stroke="#0f172a" stroke-width="3"/>
+                            <polygon points="100,38 158,80 135,148 100,148" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>
+                            <!-- Lingkaran Tengah Hijau -->
+                            <circle cx="100" cy="100" r="35" fill="#15803d" stroke="#0f172a" stroke-width="2.5"/>
+                            <!-- Gunung & Laut di Tengah -->
+                            <polygon points="82,95 100,78 118,95" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                            <rect x="82" y="95" width="36" height="7" fill="#dc2626"/>
+                            <rect x="85" y="102" width="30" height="8" rx="3" fill="#2563eb"/>
+                            <!-- Bintang Emas di Atas -->
+                            <polygon points="100,44 104,55 115,55 106,62 110,73 100,66 90,73 94,62 85,55 96,55" fill="#facc15" stroke="#0f172a" stroke-width="1.5"/>
+                            <!-- Kapas & Padi Melingkar -->
+                            <path d="M72,125 C58,105 62,78 82,68" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-dasharray="4,6"/>
+                            <path d="M128,125 C142,105 138,78 118,68" fill="none" stroke="#facc15" stroke-width="5" stroke-linecap="round" stroke-dasharray="4,6"/>
+                            <!-- Pita Merah Putih Wonogiri -->
+                            <path d="M40,158 Q100,170 160,158 L152,175 Q100,187 48,175 Z" fill="#dc2626" stroke="#0f172a" stroke-width="2.5"/>
+                            <text x="100" y="171" font-family="Arial, sans-serif" font-weight="900" font-size="13" fill="#0f172a" text-anchor="middle" letter-spacing="2">WONOGIRI</text>
+                            <path d="M48,175 Q100,187 152,175 L146,188 Q100,198 54,188 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                            <text x="100" y="185" font-family="Arial, sans-serif" font-weight="bold" font-size="5.2" fill="#0f172a" text-anchor="middle">SABDA SAKTI NUGRAHANING PRAJA</text>
+                        </svg>
+                    </div>
+                    <span class="text-[11px] sm:text-xs font-bold text-amber-300 mt-1.5 tracking-wide">PEMKAB WONOGIRI</span>
+                </div>
+
+                <!-- Logo Resmi PGRI (Custom High-Detail SVG) -->
+                <div class="flex flex-col items-center group">
+                    <div class="w-20 h-24 sm:w-28 sm:h-32 bg-white/10 p-2 rounded-2xl border border-red-400/40 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
+                        <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                            <!-- Lingkaran Luar Merah & Putih -->
+                            <circle cx="100" cy="100" r="92" fill="#dc2626" stroke="#ffffff" stroke-width="4"/>
+                            <circle cx="100" cy="100" r="85" fill="none" stroke="#ffffff" stroke-width="2"/>
+                            <!-- Lingkaran Dalam Hijau -->
+                            <circle cx="100" cy="100" r="60" fill="#15803d" stroke="#ffffff" stroke-width="3"/>
+                            <!-- Sayap / Buku Kiri & Kanan Putih -->
+                            <rect x="54" y="72" width="14" height="58" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                            <rect x="132" y="72" width="14" height="58" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                            <!-- Buku Horizontal di Bawah -->
+                            <rect x="70" y="110" width="60" height="10" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                            <rect x="70" y="121" width="60" height="10" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+                            <!-- Tiang Obor Kuning -->
+                            <polygon points="86,82 114,82 106,148 94,148" fill="#facc15" stroke="#ffffff" stroke-width="2"/>
+                            <ellipse cx="100" cy="76" rx="22" ry="6" fill="#facc15" stroke="#ffffff" stroke-width="2"/>
+                            <ellipse cx="100" cy="66" rx="18" ry="5" fill="#facc15" stroke="#ffffff" stroke-width="2"/>
+                            <!-- Api Obor Merah Menyala -->
+                            <path d="M82,60 C78,42 90,35 92,44 C94,25 106,20 105,38 C112,30 122,42 118,60 Z" fill="#dc2626" stroke="#ffffff" stroke-width="2.5"/>
+                            <!-- Teks Melingkar PGRI -->
+                            <path id="pgriTopCurve" d="M 27,100 A 73,73 0 1,1 173,100" fill="none"/>
+                            <text font-family="Arial, sans-serif" font-weight="900" font-size="11.5" fill="#ffffff" letter-spacing="1.2">
+                                <textPath href="#pgriTopCurve" startOffset="50%" text-anchor="middle">PERSATUAN GURU REPUBLIK INDONESIA</textPath>
+                            </text>
+                            <text x="100" y="179" font-family="Arial, sans-serif" font-weight="900" font-size="18" fill="#ffffff" text-anchor="middle" letter-spacing="3">PGRI</text>
+                        </svg>
+                    </div>
+                    <span class="text-[11px] sm:text-xs font-bold text-red-300 mt-1.5 tracking-wide">LOGO RESMI PGRI</span>
+                </div>
+            </div>
+
+            <!-- Judul Game & Sub-judul -->
+            <div class="mb-5">
+                <span class="inline-block bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 px-4 py-1 rounded-full text-xs sm:text-sm font-extrabold tracking-wider uppercase mb-2">
+                    <i class="fa-solid fa-hand-sparkles mr-1"></i> Interactive Motion & Touch Math Game
+                </span>
+                <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 drop-shadow-lg leading-tight">
+                    PETUALANGAN ANGKA 100.000
+                </h1>
+                <p class="text-sm sm:text-lg text-blue-100 font-semibold mt-2 max-w-2xl mx-auto">
+                    Game Sensor Gerak Tangkap Jawaban: Operasi Hitung Bilangan Cacah Sampai 100.000 (Kelas 6 SD Fase C)
+                </p>
+            </div>
+
+            <!-- Identitas Kreator: Yuli Sri Untari & Cabang PGRI Sidoharjo -->
+            <div class="w-full max-w-lg bg-gradient-to-r from-indigo-900/90 via-blue-900/90 to-indigo-900/90 border-2 border-amber-400/50 rounded-2xl p-4 mb-7 shadow-xl">
+                <p class="text-xs uppercase tracking-widest text-amber-300 font-bold mb-1">Karya Inovasi Pembelajaran Oleh:</p>
+                <h2 class="text-xl sm:text-2xl font-title font-bold text-white tracking-wide flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user text-amber-400"></i> Yuli Sri Untari
+                </h2>
+                <div class="h-px w-32 bg-amber-400/40 mx-auto my-1.5"></div>
+                <p class="text-sm sm:text-base font-extrabold text-cyan-300 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-building-flag text-red-400"></i> Cabang PGRI Sidoharjo - Kabupaten Wonogiri
+                </p>
+            </div>
+
+            <!-- Tombol "Mulai / Start" & Tombol "Petunjuk" -->
+            <div class="flex flex-wrap items-center justify-center gap-4 w-full">
+                <button onclick="openEducationScreen('start')" class="btn-game bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-slate-950 font-title font-extrabold text-lg sm:text-2xl px-8 py-4 rounded-2xl flex items-center gap-3 border-2 border-emerald-200">
+                    <i class="fa-solid fa-play text-xl"></i> MULAI / START
+                </button>
+                <button onclick="openEducationScreen('guide')" class="btn-game bg-gradient-to-b from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-title font-extrabold text-lg sm:text-2xl px-7 py-4 rounded-2xl flex items-center gap-3 border-2 border-amber-200">
+                    <i class="fa-solid fa-book-open-reader text-xl"></i> PETUNJUK
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             2. HALAMAN EDUKASI & PENGATURAN
+             ========================================== -->
+        <section id="screen-education" class="hidden w-full bg-slate-900/85 backdrop-blur-xl border-2 border-cyan-400/30 rounded-3xl p-5 sm:p-7 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/15 pb-4 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 text-xl">
+                        <i class="fa-solid fa-compass-drafting"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl sm:text-3xl font-title font-bold text-amber-300">Halaman Edukasi & Pengaturan</h2>
+                        <p class="text-xs sm:text-sm text-slate-300">Pelajari cara bermain sensor gerak dan pilih mode tantanganmu!</p>
+                    </div>
+                </div>
+                <button onclick="showScreen('screen-splash')" class="btn-game bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+                <!-- Tujuan Pembelajaran & Target Capaian -->
+                <div class="bg-indigo-950/70 border border-indigo-400/30 rounded-2xl p-4 sm:p-5">
+                    <h3 class="text-lg font-title font-bold text-cyan-300 flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-bullseye text-amber-400"></i> Tujuan Pembelajaran & Capaian (Fase C)
+                    </h3>
+                    <div class="space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                        <div class="bg-white/5 p-3 rounded-xl border-l-4 border-amber-400">
+                            <p class="font-bold text-amber-300">Capaian Pembelajaran (CP):</p>
+                            <p>Peserta didik dapat melakukan operasi <strong>penjumlahan, pengurangan, perkalian, dan pembagian bilangan cacah sampai 100.000</strong> serta menyelesaikan masalah kontekstual yang berkaitan.</p>
+                        </div>
+                        <ul class="space-y-1.5 pl-1">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1"></i>
+                                <span>Melatih ketepatan menghitung penjumlahan & pengurangan hingga 100.000.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1"></i>
+                                <span>Menguasai perkalian dan pembagian bilangan cacah besar secara tangkas.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1"></i>
+                                <span>Meningkatkan koordinasi motorik dan fokus melalui interaksi sensor gerak.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Petunjuk Cara Bermain & Kontrol -->
+                <div class="bg-indigo-950/70 border border-indigo-400/30 rounded-2xl p-4 sm:p-5">
+                    <h3 class="text-lg font-title font-bold text-amber-300 flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-hands-clapping text-cyan-400"></i> Petunjuk Cara Bermain & Kontrol
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                        <div class="bg-emerald-950/60 border border-emerald-500/30 p-3 rounded-xl">
+                            <div class="font-bold text-emerald-300 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-video"></i> 1. Mode Sensor Gerak Tangan
+                            </div>
+                            <p class="text-slate-200">Izinkan akses kamera. <strong>Lambaikan tanganmu</strong> di udara tepat pada posisi balon jawaban (A, B, C, atau D) di layar hingga cincin energi penuh!</p>
+                        </div>
+                        <div class="bg-blue-950/60 border border-blue-500/30 p-3 rounded-xl">
+                            <div class="font-bold text-blue-300 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-hand-pointer"></i> 2. Layar Sentuh / Papan Digital
+                            </div>
+                            <p class="text-slate-200">Bisa juga langsung <strong>menyentuh (Tap)</strong> atau klik kartu jawaban di Papan Interaktif Digital (IFP), iPad, Tablet, Laptop, maupun HP.</p>
+                        </div>
+                        <div class="bg-purple-950/60 border border-purple-500/30 p-3 rounded-xl sm:col-span-2">
+                            <div class="font-bold text-purple-300 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-keyboard"></i> 3. Pintasan Keyboard & Aturan Skor
+                            </div>
+                            <p class="text-slate-200">Tekan tombol <strong>A, B, C, D</strong> atau <strong>1, 2, 3, 4</strong> pada keyboard. Tersedia <strong>100+ Bank Soal (25+ soal unik per mode operasi)</strong>!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pilihan Mode Operasi, Tingkat Kesulitan & Jumlah Soal -->
+            <div class="bg-slate-800/70 border border-white/10 rounded-2xl p-4 sm:p-5 mb-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Pilih Fokus Operasi -->
+                    <div>
+                        <label class="block text-sm font-title font-bold text-cyan-300 mb-2">
+                            <i class="fa-solid fa-calculator mr-1"></i> Pilih Mode Operasi (25+ Soal/Mode):
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2" id="mode-buttons">
+                            <button onclick="selectOperationMode('campuran')" data-mode="campuran" class="mode-btn btn-game bg-amber-400 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 col-span-2 sm:col-span-1 lg:col-span-2">
+                                <i class="fa-solid fa-shuffle"></i> Semua (100+ Soal Campuran)
+                            </button>
+                            <button onclick="selectOperationMode('tambah')" data-mode="tambah" class="mode-btn btn-game bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-plus"></i> Penjumlahan (25 Soal)
+                            </button>
+                            <button onclick="selectOperationMode('kurang')" data-mode="kurang" class="mode-btn btn-game bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-minus"></i> Pengurangan (25 Soal)
+                            </button>
+                            <button onclick="selectOperationMode('kali')" data-mode="kali" class="mode-btn btn-game bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-xmark"></i> Perkalian (25 Soal)
+                            </button>
+                            <button onclick="selectOperationMode('bagi')" data-mode="bagi" class="mode-btn btn-game bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-divide"></i> Pembagian (25 Soal)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilih Tingkat Kesulitan -->
+                    <div>
+                        <label class="block text-sm font-title font-bold text-amber-300 mb-2">
+                            <i class="fa-solid fa-gauge-high mr-1"></i> Pilih Tingkat Kesulitan:
+                        </label>
+                        <div class="grid grid-cols-3 gap-2" id="diff-buttons">
+                            <button onclick="selectDifficulty('mudah')" data-diff="mudah" class="diff-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span>🌱 Mudah</span>
+                                <span class="text-[10px] opacity-80">10.000 - 40.000</span>
+                            </button>
+                            <button onclick="selectDifficulty('sedang')" data-diff="sedang" class="diff-btn btn-game bg-emerald-400 text-slate-950 font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span>⚡ Sedang</span>
+                                <span class="text-[10px] opacity-80">20.000 - 75.000</span>
+                            </button>
+                            <button onclick="selectDifficulty('mahir')" data-diff="mahir" class="diff-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span>🔥 Mahir</span>
+                                <span class="text-[10px] opacity-80">Hingga 100.000</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilih Jumlah Soal per Permainan -->
+                    <div>
+                        <label class="block text-sm font-title font-bold text-emerald-300 mb-2">
+                            <i class="fa-solid fa-list-check mr-1"></i> Jumlah Soal Dimainkan:
+                        </label>
+                        <div class="grid grid-cols-4 gap-2" id="count-buttons">
+                            <button onclick="selectQuestionCount(5)" data-count="5" class="count-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span class="text-sm font-extrabold">5</span>
+                                <span class="text-[10px] opacity-80">Kilat</span>
+                            </button>
+                            <button onclick="selectQuestionCount(10)" data-count="10" class="count-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span class="text-sm font-extrabold">10</span>
+                                <span class="text-[10px] opacity-80">Standar</span>
+                            </button>
+                            <button onclick="selectQuestionCount(20)" data-count="20" class="count-btn btn-game bg-cyan-400 text-slate-950 font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span class="text-sm font-extrabold">20</span>
+                                <span class="text-[10px] opacity-80">Latihan</span>
+                            </button>
+                            <button onclick="selectQuestionCount(25)" data-count="25" class="count-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center">
+                                <span class="text-sm font-extrabold">25</span>
+                                <span class="text-[10px] opacity-80">Penuh</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Luncurkan Permainan -->
+            <div class="flex justify-center">
+                <button onclick="startGame()" class="btn-game bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-title font-extrabold text-xl sm:text-2xl px-10 py-4 rounded-2xl flex items-center gap-3 shadow-xl border-2 border-white">
+                    <i class="fa-solid fa-rocket"></i> MULAI PETUALANGAN SEKARANG!
+                </button>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             3. HALAMAN UTAMA PERMAINAN / GAMEPLAY
+             ========================================== -->
+        <section id="screen-gameplay" class="hidden w-full flex flex-col gap-3">
+            
+            <!-- HUD Bar: Skor, Soal ke-, Nyawa, Waktu, dan Pause -->
+            <div class="w-full bg-slate-900/85 backdrop-blur-md border border-white/15 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+                <!-- Skor & Nomor Soal -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-500/20 border border-amber-400/40 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+                        <div>
+                            <div class="text-[10px] uppercase text-amber-200 font-bold">SKOR</div>
+                            <div id="hud-score" class="text-lg sm:text-xl font-title font-extrabold text-white leading-none">0</div>
+                        </div>
+                    </div>
+                    <div class="bg-cyan-500/20 border border-cyan-400/40 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-cyan-400 text-lg"></i>
+                        <div>
+                            <div class="text-[10px] uppercase text-cyan-200 font-bold">SOAL</div>
+                            <div id="hud-question-num" class="text-lg sm:text-xl font-title font-extrabold text-white leading-none">1 / 5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nyawa / Kesempatan -->
+                <div class="bg-rose-500/20 border border-rose-400/40 px-4 py-1.5 rounded-xl flex items-center gap-2">
+                    <span class="text-xs font-bold text-rose-200 hidden sm:inline">NYAWA:</span>
+                    <div id="hud-lives" class="flex items-center gap-1.5 text-lg sm:text-xl text-rose-400">
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                </div>
+
+                <!-- Timer & Pause -->
+                <div class="flex items-center gap-2">
+                    <div class="bg-indigo-500/20 border border-indigo-400/40 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-indigo-300 text-lg"></i>
+                        <div>
+                            <div class="text-[10px] uppercase text-indigo-200 font-bold">WAKTU</div>
+                            <div id="hud-timer" class="text-lg sm:text-xl font-title font-extrabold text-amber-300 leading-none">45d</div>
+                        </div>
+                    </div>
+                    <button onclick="togglePauseGame()" class="btn-game bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1.5 border border-white/20">
+                        <i id="pause-icon" class="fa-solid fa-pause"></i>
+                        <span class="hidden sm:inline">Jeda</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Area Arena Sensor Kamera & Soal Interaktif -->
+            <div class="relative w-full min-h-[470px] sm:min-h-[520px] bg-slate-950/90 border-2 border-cyan-400/40 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between p-4 sm:p-6">
+                
+                <!-- Feed Kamera Webcam (Mirrored) untuk Sensor Gerak -->
+                <video id="webcam-video" autoplay playsinline muted class="mirror-video absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none"></video>
+                <!-- Canvas Tersembunyi untuk Pemrosesan Deteksi Gerakan Pixel -->
+                <canvas id="motion-canvas" width="160" height="120" class="hidden"></canvas>
+                <!-- Canvas Overlay Visualisasi Sensor Gerak Tangan -->
+                <canvas id="visual-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+
+                <!-- Baris Atas: Pilihan Jawaban A & B (Kiri Atas & Kanan Atas) -->
+                <div class="relative z-20 grid grid-cols-2 gap-4 sm:gap-10 w-full">
+                    <!-- Zona Jawaban A (Pojok Kiri Atas) -->
+                    <button id="zone-0" onclick="handleAnswerSelect(0)" class="answer-orb group relative bg-gradient-to-br from-rose-500/90 to-pink-600/90 hover:from-rose-400 hover:to-pink-500 backdrop-blur-md border-2 border-white/70 rounded-2xl p-3 sm:p-4 text-left shadow-xl flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white text-rose-600 font-title font-extrabold text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow">A</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[10px] sm:text-xs text-rose-100 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-hand-sparkles"></i> Lambaikan / Sentuh
+                            </div>
+                            <div id="ans-text-0" class="text-lg sm:text-2xl md:text-3xl font-title font-extrabold text-white truncate">24.500</div>
+                        </div>
+                        <!-- Bar Progres Sensor Gerak -->
+                        <div class="absolute bottom-0 left-0 h-2 bg-yellow-300 transition-all duration-75" id="motion-bar-0" style="width: 0%;"></div>
+                    </button>
+
+                    <!-- Zona Jawaban B (Pojok Kanan Atas) -->
+                    <button id="zone-1" onclick="handleAnswerSelect(1)" class="answer-orb group relative bg-gradient-to-br from-blue-500/90 to-indigo-600/90 hover:from-blue-400 hover:to-indigo-500 backdrop-blur-md border-2 border-white/70 rounded-2xl p-3 sm:p-4 text-left shadow-xl flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white text-blue-600 font-title font-extrabold text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow">B</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[10px] sm:text-xs text-blue-100 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-hand-sparkles"></i> Lambaikan / Sentuh
+                            </div>
+                            <div id="ans-text-1" class="text-lg sm:text-2xl md:text-3xl font-title font-extrabold text-white truncate">34.500</div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 h-2 bg-yellow-300 transition-all duration-75" id="motion-bar-1" style="width: 0%;"></div>
+                    </button>
+                </div>
+
+                <!-- Area Tengah: Kartu Soal & Ilustrasi Visual Kontekstual -->
+                <div class="relative z-20 my-auto py-3 flex flex-col items-center justify-center">
+                    <div class="w-full max-w-2xl bg-slate-900/90 backdrop-blur-xl border-2 border-amber-400/70 rounded-3xl p-4 sm:p-6 text-center shadow-2xl">
+                        <div class="inline-flex items-center gap-2 bg-amber-400/20 text-amber-300 px-3 py-1 rounded-full text-xs font-extrabold mb-2">
+                            <i id="question-icon" class="fa-solid fa-Compass"></i>
+                            <span id="question-category">OPERASI BILANGAN CACAH</span>
+                        </div>
+                        <!-- Cerita Kontekstual Singkat -->
+                        <p id="question-story" class="text-xs sm:text-base text-slate-200 font-semibold mb-2">
+                            Gudang panen Kecamatan Sidoharjo mencatat hasil panen berikut:
+                        </p>
+                        <!-- Angka Operasi Utama -->
+                        <div id="question-math" class="text-2xl sm:text-4xl md:text-5xl font-title font-extrabold text-amber-300 tracking-wide bg-slate-950/80 py-3 px-4 rounded-2xl border border-white/10 shadow-inner">
+                            45.250 + 32.750 = ...
+                        </div>
+                        <!-- Petunjuk Sensor di Bawah Soal -->
+                        <p id="sensor-status-hint" class="text-[11px] sm:text-xs text-cyan-300 mt-2.5 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-hand-paper animate-bounce"></i>
+                            <span>Gerakkan tanganmu di depan kamera pada kotak A, B, C, atau D (atau sentuh langsung)!</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Baris Bawah: Pilihan Jawaban C & D (Kiri Bawah & Kanan Bawah) -->
+                <div class="relative z-20 grid grid-cols-2 gap-4 sm:gap-10 w-full">
+                    <!-- Zona Jawaban C (Pojok Kiri Bawah) -->
+                    <button id="zone-2" onclick="handleAnswerSelect(2)" class="answer-orb group relative bg-gradient-to-br from-emerald-500/90 to-teal-600/90 hover:from-emerald-400 hover:to-teal-500 backdrop-blur-md border-2 border-white/70 rounded-2xl p-3 sm:p-4 text-left shadow-xl flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white text-emerald-600 font-title font-extrabold text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow">C</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[10px] sm:text-xs text-emerald-100 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-hand-sparkles"></i> Lambaikan / Sentuh
+                            </div>
+                            <div id="ans-text-2" class="text-lg sm:text-2xl md:text-3xl font-title font-extrabold text-white truncate">78.000</div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 h-2 bg-yellow-300 transition-all duration-75" id="motion-bar-2" style="width: 0%;"></div>
+                    </button>
+
+                    <!-- Zona Jawaban D (Pojok Kanan Bawah) -->
+                    <button id="zone-3" onclick="handleAnswerSelect(3)" class="answer-orb group relative bg-gradient-to-br from-purple-500/90 to-violet-600/90 hover:from-purple-400 hover:to-violet-500 backdrop-blur-md border-2 border-white/70 rounded-2xl p-3 sm:p-4 text-left shadow-xl flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white text-purple-600 font-title font-extrabold text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow">D</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[10px] sm:text-xs text-purple-100 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-hand-sparkles"></i> Lambaikan / Sentuh
+                            </div>
+                            <div id="ans-text-3" class="text-lg sm:text-2xl md:text-3xl font-title font-extrabold text-white truncate">88.000</div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 h-2 bg-yellow-300 transition-all duration-75" id="motion-bar-3" style="width: 0%;"></div>
+                    </button>
+                </div>
+
+                <!-- Overlay Umpan Balik Langsung (Benar / Salah) -->
+                <div id="feedback-overlay" class="hidden absolute inset-0 z-30 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                    <div id="feedback-icon" class="w-20 h-20 rounded-full flex items-center justify-center text-5xl mb-3 shadow-2xl"></div>
+                    <h3 id="feedback-title" class="text-3xl sm:text-4xl font-title font-extrabold mb-2">HEBAT! JAWABAN BENAR!</h3>
+                    <p id="feedback-desc" class="text-base sm:text-lg text-slate-200 max-w-md font-semibold mb-4"></p>
+                    <button onclick="proceedNextQuestion()" class="btn-game bg-amber-400 hover:bg-amber-300 text-slate-950 font-title font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                        <span>Soal Berikutnya</span> <i class="fa-solid fa-forward-step"></i>
+                    </button>
+                </div>
+
+                <!-- Overlay Pause / Jeda Permainan -->
+                <div id="pause-overlay" class="hidden absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-lg flex flex-col items-center justify-center p-6 text-center">
+                    <i class="fa-solid fa-circle-pause text-6xl text-amber-400 mb-4"></i>
+                    <h3 class="text-3xl font-title font-bold text-white mb-2">PERMAINAN DIJEDA</h3>
+                    <p class="text-slate-300 text-sm mb-6">Istirahat sejenak, tarik napas, dan lanjutkan petualanganmu!</p>
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button onclick="togglePauseGame()" class="btn-game bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-title font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Lanjutkan Main
+                        </button>
+                        <button onclick="quitToSplash()" class="btn-game bg-rose-600 hover:bg-rose-500 text-white font-title font-bold px-6 py-3 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-house"></i> Keluar ke Menu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             4. HALAMAN HASIL / GAME OVER / VICTORY
+             ========================================== -->
+        <section id="screen-result" class="hidden w-full bg-slate-900/90 backdrop-blur-xl border-2 border-amber-400/40 rounded-3xl p-5 sm:p-8 shadow-2xl text-center">
+            
+            <!-- Badge Status & Bintang Apresiasi -->
+            <div id="result-badge" class="inline-block bg-amber-400/20 border border-amber-400 text-amber-300 px-4 py-1 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider mb-2">
+                MISI SELESAI!
+            </div>
+            <h2 id="result-title" class="text-3xl sm:text-5xl font-title font-extrabold text-white mb-3">
+                LUAR BIASA, JUARA MATEMATIKA!
+            </h2>
+
+            <!-- Bintang Apresiasi -->
+            <div id="result-stars" class="flex items-center justify-center gap-3 text-4xl sm:text-6xl text-amber-400 my-4 drop-shadow-lg">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+            </div>
+
+            <!-- Kotak Ringkasan Skor Akhir -->
+            <div class="grid grid-cols-3 gap-3 max-w-lg mx-auto mb-6">
+                <div class="bg-indigo-950/80 border border-indigo-400/30 rounded-2xl p-3">
+                    <div class="text-xs text-indigo-300 font-bold">SKOR AKHIR</div>
+                    <div id="final-score" class="text-2xl sm:text-4xl font-title font-extrabold text-amber-400">100</div>
+                </div>
+                <div class="bg-emerald-950/80 border border-emerald-400/30 rounded-2xl p-3">
+                    <div class="text-xs text-emerald-300 font-bold">JAWABAN BENAR</div>
+                    <div id="final-correct" class="text-2xl sm:text-4xl font-title font-extrabold text-emerald-400">5 / 5</div>
+                </div>
+                <div class="bg-rose-950/80 border border-rose-400/30 rounded-2xl p-3">
+                    <div class="text-xs text-rose-300 font-bold">SISA NYAWA</div>
+                    <div id="final-lives" class="text-2xl sm:text-4xl font-title font-extrabold text-rose-400">3 ❤️</div>
+                </div>
+            </div>
+
+            <!-- Rincian Evaluasi Jawaban & Pembahasan Singkat -->
+            <div class="text-left bg-slate-950/70 border border-white/15 rounded-2xl p-4 sm:p-5 mb-6 max-h-64 overflow-y-auto">
+                <h3 class="text-base sm:text-lg font-title font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-check text-amber-400"></i> Rincian Evaluasi Jawaban & Pembahasan Singkat
+                </h3>
+                <div id="evaluation-list" class="space-y-3 text-xs sm:text-sm">
+                    <!-- Diisi secara dinamis oleh JavaScript -->
+                </div>
+            </div>
+
+            <!-- Tombol "Main Lagi" & "Keluar" -->
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <button onclick="startGame()" class="btn-game bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-slate-950 font-title font-extrabold text-lg sm:text-xl px-8 py-3.5 rounded-2xl flex items-center gap-2.5 border-2 border-emerald-200">
+                    <i class="fa-solid fa-rotate-right"></i> MAIN LAGI
+                </button>
+                <button onclick="openEducationScreen('start')" class="btn-game bg-gradient-to-b from-cyan-400 to-blue-600 hover:from-cyan-300 hover:to-blue-500 text-white font-title font-extrabold text-lg sm:text-xl px-6 py-3.5 rounded-2xl flex items-center gap-2.5 border-2 border-cyan-200">
+                    <i class="fa-solid fa-sliders"></i> GANTI MODE
+                </button>
+                <button onclick="quitToSplash()" class="btn-game bg-gradient-to-b from-rose-500 to-red-700 hover:from-rose-400 hover:to-red-600 text-white font-title font-extrabold text-lg sm:text-xl px-7 py-3.5 rounded-2xl flex items-center gap-2.5 border-2 border-rose-300">
+                    <i class="fa-solid fa-right-from-bracket"></i> KELUAR
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Resmi -->
+    <footer class="relative z-20 w-full py-2.5 px-4 text-center text-xs text-slate-400 bg-slate-950/60 border-t border-white/10">
+        <span>© 2026 Media Pembelajaran Interaktif Kelas 6 SD Fase C • <strong>Yuli Sri Untari</strong> (Cabang PGRI Sidoharjo - Kabupaten Wonogiri)</span>
+    </footer>
+
+    <!-- ==========================================
+         LOGIKA PERMAINAN, GENERATOR SOAL & SENSOR GERAK
+         ========================================== -->
+    <script>
+        /**************************************************************
+         * 1. STATE GLOBAL PERMAINAN
+         **************************************************************/
+        let soundEnabled = true;
+        let cameraEnabled = true;
+        let cameraStream = null;
+        let selectedMode = 'campuran'; // campuran, tambah, kurang, kali, bagi
+        let selectedDiff = 'sedang';   // mudah, sedang, mahir
+        let totalQuestionsToPlay = 20; // Default 20 soal sesuai permintaan (>20 soal tersedia)
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let lives = 5;
+        let maxLives = 5;
+        let timerSeconds = 45;
+        let timerInterval = null;
+        let feedbackTimeout = null;
+        let isPaused = false;
+        let isAnswering = false;
+        let questionsList = [];
+        let evaluationHistory = [];
+
+        // Variabel Sensor Gerak (Webcam Motion Detection)
+        let prevFrameData = null;
+        let zoneCharge = [0, 0, 0, 0]; // Akumulasi gerakan di zona A, B, C, D (0 - 100)
+        let motionLoopId = null;
+
+        /**************************************************************
+         * 2. EFEK SUARA SINTETIS (TONE.JS)
+         **************************************************************/
+        let synth = null;
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -6;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') {
+                    Tone.context.resume();
+                }
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "16n", now);
+                } else if (type === 'correct') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n", now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(["F3", "B2"], "4n", now);
+                } else if (type === 'victory') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+                    synth.triggerAttackRelease(["D5", "F5", "A5"], "8n", now + 0.18);
+                    synth.triggerAttackRelease(["E5", "G5", "C6"], "4n", now + 0.36);
+                }
+            } catch (e) {
+                // Abaikan jika browser memblokir autoplay audio sebelum interaksi
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const btn = document.getElementById('btn-toggle-sound');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                btn.classList.replace('bg-slate-700', 'bg-amber-500');
+                btn.classList.replace('text-white', 'text-slate-950');
+                playSound('click');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+                btn.classList.replace('bg-amber-500', 'bg-slate-700');
+                btn.classList.replace('text-slate-950', 'text-white');
+            }
+        }
+
+        /**************************************************************
+         * 3. NAVIGASI ANTAR LAYAR
+         **************************************************************/
+        function showScreen(screenId) {
+            playSound('click');
+            const screens = ['screen-splash', 'screen-education', 'screen-gameplay', 'screen-result'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function openEducationScreen(origin) {
+            showScreen('screen-education');
+        }
+
+        function selectOperationMode(mode) {
+            playSound('click');
+            selectedMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                const isFirst = btn.dataset.mode === 'campuran';
+                const spanClass = isFirst ? ' col-span-2 sm:col-span-1 lg:col-span-2' : '';
+                if (btn.dataset.mode === mode) {
+                    btn.className = 'mode-btn btn-game bg-amber-400 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5' + spanClass;
+                } else {
+                    btn.className = 'mode-btn btn-game bg-slate-700 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5' + spanClass;
+                }
+            });
+        }
+
+        function selectDifficulty(diff) {
+            playSound('click');
+            selectedDiff = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                if (btn.dataset.diff === diff) {
+                    btn.className = 'diff-btn btn-game bg-emerald-400 text-slate-950 font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center';
+                } else {
+                    btn.className = 'diff-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center';
+                }
+            });
+        }
+
+        function selectQuestionCount(count) {
+            playSound('click');
+            totalQuestionsToPlay = count;
+            document.querySelectorAll('.count-btn').forEach(btn => {
+                if (parseInt(btn.dataset.count) === count) {
+                    btn.className = 'count-btn btn-game bg-cyan-400 text-slate-950 font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center';
+                } else {
+                    btn.className = 'count-btn btn-game bg-slate-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs flex flex-col items-center';
+                }
+            });
+        }
+
+        function quitToSplash() {
+            clearInterval(timerInterval);
+            clearTimeout(feedbackTimeout);
+            stopMotionDetection();
+            document.getElementById('pause-overlay').classList.add('hidden');
+            showScreen('screen-splash');
+        }
+
+        /**************************************************************
+         * 4. BANK SOAL KONTEKSTUAL (25 SOAL PER MODE = 100 SOAL UNIK)
+         *    Operasi Hitung Bilangan Cacah Sampai 100.000 (Fase C)
+         **************************************************************/
+        function formatNumberID(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 25 Skenario Soal Penjumlahan Kontekstual (Wonogiri & Sidoharjo)
+        const BANK_CERITA_TAMBAH = [
+            (a, b) => `Koperasi Tani di Kecamatan Sidoharjo mengumpulkan ${a} kg gabah pada bulan pertama dan ${b} kg pada bulan kedua. Berapa kg total gabah seluruhnya?`,
+            (a, b) => `Perpustakaan Daerah Kabupaten Wonogiri mendata ${a} buku cerita anak dan ${b} buku ensiklopedia sains. Berapa jumlah seluruh buku tersebut?`,
+            (a, b) => `Panitia penghijauan Wonogiri menanam ${a} bibit pohon jati dan ${b} bibit pohon mahoni di lereng bukit. Berapa total bibit pohon yang ditanam?`,
+            (a, b) => `Waduk Gajah Mungkur dikunjungi ${a} wisatawan pada pekan pertama dan ${b} wisatawan pada pekan kedua. Berapa jumlah seluruh wisatawan?`,
+            (a, b) => `Pabrik pengolahan mete di Sidoharjo mengemas ${a} bungkus kacang mete rasa asin dan ${b} bungkus rasa manis. Berapa total bungkus kacang mete?`,
+            (a, b) => `Dalam kegiatan jalan sehat PGRI Cabang Sidoharjo, panitia menyiapkan ${a} botol air mineral di pos pertama dan ${b} botol di pos kedua. Berapa total botol air mineral?`,
+            (a, b) => `Petani singkong di Wonogiri memanen ${a} kg singkong dari ladang barat dan ${b} kg dari ladang timur. Berapa kg jumlah panen singkong seluruhnya?`,
+            (a, b) => `Toko alat tulis sekolah menjual ${a} buku tulis pada semester ganjil dan ${b} buku tulis pada semester genap. Berapa total buku tulis yang terjual?`,
+            (a, b) => `Dinas Perikanan menebar ${a} benih ikan nila dan ${b} benih ikan patin di perairan Wonogiri. Berapa ekor jumlah seluruh benih ikan yang ditebar?`,
+            (a, b) => `Pengrajin batik tulis Wonogiren memproduksi ${a} meter kain motif klasik dan ${b} meter kain motif modern. Berapa meter total kain batik yang diproduksi?`,
+            (a, b) => `SDN di Kecamatan Sidoharjo mengumpulkan dana bakti sosial sebesar Rp${a} dari kelas bawah dan Rp${b} dari kelas atas. Berapa rupiah total dana terkumpul?`,
+            (a, b) => `Sebuah truk logistik mengangkut ${a} buah batu bata merah pada pagi hari dan ${b} buah pada siang hari. Berapa jumlah seluruh batu bata yang diangkut?`,
+            (a, b) => `Peternak ayam petelur di Sidoharjo mengumpulkan ${a} butir telur di kandang A dan ${b} butir telur di kandang B. Berapa total butir telur yang dikumpulkan?`,
+            (a, b) => `Sentra pembuatan kerupuk rambak memproduksi ${a} bungkus pada hari Senin dan ${b} bungkus pada hari Selasa. Berapa jumlah produksi kedua hari tersebut?`,
+            (a, b) => `Gudang Bulog menyimpan ${a} kg beras kualitas super dan ${b} kg beras kualitas medium. Berapa kg total persediaan beras di gudang?`,
+            (a, b) => `Pada lomba Pramuka tingkat kabupaten, tercatat ${a} peserta penggalang putra dan ${b} peserta penggalang putri. Berapa jumlah seluruh peserta lomba?`,
+            (a, b) => `Koperasi sekolah menerima kiriman ${a} lembar kertas HVS putih dan ${b} lembar kertas warna. Berapa lembar total kertas yang diterima koperasi?`,
+            (a, b) => `Pasar tradisional Sidoharjo menerima pasokan ${a} buah jeruk manis dan ${b} buah apel segar. Berapa jumlah seluruh buah yang masuk ke pasar?`,
+            (a, b) => `Komunitas pecinta lingkungan mengumpulkan ${a} gram sampah plastik di taman kota dan ${b} gram di area pasar. Berapa gram total sampah plastik yang berhasil dikumpulkan?`,
+            (a, b) => `Untuk pembangunan gedung sekolah, dibeli ${a} keramik lantai warna putih dan ${b} keramik warna krem. Berapa jumlah seluruh keramik yang dibeli?`,
+            (a, b) => `Seorang pedagang sembako memiliki tabungan Rp${a} di bank dan menambah setoran sebesar Rp${b}. Berapa rupiah total tabungan pedagang itu sekarang?`,
+            (a, b) => `Perkebunan kakao di Wonogiri menghasilkan ${a} buah cokelat pada panen awal dan ${b} buah pada panen raya. Berapa jumlah seluruh buah cokelat?`,
+            (a, b) => `Dalam festival kuliner daerah, terjual ${a} porsi nasi tiwul dan ${b} porsi bakso Wonogiri. Berapa total porsi makanan yang terjual?`,
+            (a, b) => `Percetakan daerah mencetak ${a} eksemplar modul Matematika dan ${b} eksemplar modul Bahasa Indonesia. Berapa total modul yang dicetak?`,
+            (a, b) => `Bantuan pupuk organik sebanyak ${a} kg dikirim ke Desa A dan ${b} kg dikirim ke Desa B di Kecamatan Sidoharjo. Berapa kg total pupuk yang dikirim?`
+        ];
+
+        // 25 Skenario Soal Pengurangan Kontekstual
+        const BANK_CERITA_KURANG = [
+            (a, b) => `Sebuah gudang pangan di Sidoharjo memiliki persediaan ${a} kg beras. Sebanyak ${b} kg telah disalurkan ke masyarakat. Berapa kg sisa beras di gudang?`,
+            (a, b) => `Target pengunjung pameran inovasi pendidikan Wonogiri adalah ${a} orang. Jika hari ini sudah hadir ${b} orang, berapa orang lagi untuk mencapai target?`,
+            (a, b) => `Peternak ayam di Wonogiri memanen ${a} butir telur. Sebanyak ${b} butir telah terjual ke pasar kota. Berapa butir sisa telur yang belum terjual?`,
+            (a, b) => `Perpustakaan sekolah memiliki koleksi ${a} buku. Sebanyak ${b} buku sedang dipinjam oleh para siswa. Berapa buku yang masih tersisa di rak perpustakaan?`,
+            (a, b) => `Dinas Kehutanan menyiapkan ${a} bibit pohon trembesi. Sebanyak ${b} bibit sudah ditanam di pinggir jalan raya. Berapa bibit pohon yang belum ditanam?`,
+            (a, b) => `Seorang pengrajin mebel memiliki persediaan ${a} potong kayu jati. Sebanyak ${b} potong digunakan untuk membuat meja belajar. Berapa sisa potong kayu jati?`,
+            (a, b) => `Panitia gerak jalan PGRI mencetak ${a} kupon undian. Jika sudah dibagikan sebanyak ${b} kupon kepada peserta, berapa kupon yang masih tersisa?`,
+            (a, b) => `Koperasi simpan pinjam memiliki kas sebesar Rp${a}. Sebanyak Rp${b} digunakan untuk pembelian perlengkapan kantor. Berapa rupiah sisa kas koperasi?`,
+            (a, b) => `Tangki penampungan air bersih berisi ${a} liter air. Warga telah menggunakan sebanyak ${b} liter untuk kebutuhan sehari-hari. Berapa liter sisa air di tangki?`,
+            (a, b) => `Hasil panen gaplek tahun ini mencapai ${a} kg. Sebanyak ${b} kg telah dikirim ke pabrik tepung tapioka. Berapa kg gaplek yang masih tersimpan?`,
+            (a, b) => `Toko grosir memiliki stok ${a} pak buku gambar. Pada awal tahun ajaran baru terjual ${b} pak. Berapa pak buku gambar yang masih tersedia?`,
+            (a, b) => `Sebuah proyek jalan desa membutuhkan ${a} buah paving block. Saat ini pekerja sudah memasang ${b} buah. Berapa buah paving block yang belum terpasang?`,
+            (a, b) => `Kolam pembibitan ikan di Sidoharjo awalnya berisi ${a} ekor ikan lele. Sebanyak ${b} ekor telah dipanen oleh pembeli. Berapa ekor ikan lele yang tersisa?`,
+            (a, b) => `Ibu membeli bahan kue seharga Rp${b} menggunakan uang tunai sebesar Rp${a}. Berapa rupiah uang kembalian yang diterima Ibu?`,
+            (a, b) => `Pabrik genteng di Wonogiri mencetak ${a} buah genteng tanah liat. Setelah diperiksa, ${b} buah sudah dikirim ke pelanggan. Berapa genteng yang masih di pabrik?`,
+            (a, b) => `Jumlah penduduk di dua wilayah adalah ${a} jiwa. Jika wilayah pertama dihuni oleh ${b} jiwa, berapa jumlah penduduk di wilayah kedua?`,
+            (a, b) => `Seorang distributor buah membawa ${a} gram jeruk keprok. Di pasar pertama terjual ${b} gram. Berapa gram jeruk keprok yang tersisa?`,
+            (a, b) => `Dalam gudang percetakan terdapat ${a} lembar kalender pendidikan. Sebanyak ${b} lembar telah didistribusikan ke sekolah-sekolah. Berapa lembar sisanya?`,
+            (a, b) => `Seorang atlet sepeda menargetkan kayuhan sejauh ${a} meter minggu ini. Ia sudah menempuh jarak ${b} meter. Berapa meter lagi jarak yang harus ditempuh?`,
+            (a, b) => `Sentra UMKM kuliner menyiapkan ${a} bungkus keripik tempe. Sebanyak ${b} bungkus dibeli oleh rombongan wisatawan. Berapa bungkus yang masih ada?`,
+            (a, b) => `Dana tabungan kelas 6 SD terkumpul Rp${a}. Untuk acara perpisahan kelas digunakan sebesar Rp${b}. Berapa rupiah sisa dana tabungan kelas?`,
+            (a, b) => `Sebuah kebun buah memanen ${a} buah mangga harum manis. Sebanyak ${b} buah dikemas dalam keranjang besar. Berapa buah mangga yang belum dikemas?`,
+            (a, b) => `Gudang pupuk menyimpan ${a} kg pupuk urea. Kelompok tani Kecamatan Sidoharjo telah mengambil jatah sebanyak ${b} kg. Berapa kg sisa pupuk di gudang?`,
+            (a, b) => `Toko elektronik mencatat total penjualan bulan lalu ${a} unit lampu hemat energi, sedangkan bulan ini ${b} unit. Berapa selisih penjualan kedua bulan tersebut?`,
+            (a, b) => `Persediaan masker kesehatan di puskesmas berjumlah ${a} lembar. Setelah dibagikan gratis sebanyak ${b} lembar, berapa lembar masker yang tersisa?`
+        ];
+
+        // 25 Skenario Soal Perkalian Kontekstual
+        const BANK_CERITA_KALI = [
+            (a, b) => `Terdapat ${b} Sekolah Dasar yang masing-masing menerima bantuan ${a} buku tulis dari pemerintah daerah. Berapa total seluruh buku tulis yang dibagikan?`,
+            (a, b) => `Sebuah truk mengangkut ${b} karung pupuk organik. Jika setiap karung memiliki berat ${a} gram, berapa gram total berat seluruh pupuk tersebut?`,
+            (a, b) => `Setiap kotak donasi peduli pendidikan berisi Rp${a}. Jika terkumpul ${b} kotak dengan jumlah isi yang sama, berapa rupiah total dana donasi?`,
+            (a, b) => `Panitia menyiapkan ${b} dus air mineral gelas untuk peserta seminar PGRI. Jika setiap dus berisi ${a} ml air per paketnya, berapa total seluruhnya?`,
+            (a, b) => `Sebuah perkebunan di Sidoharjo memiliki ${b} baris pohon sengon. Setiap baris ditanami ${a} pohon. Berapa jumlah seluruh pohon sengon di perkebunan itu?`,
+            (a, b) => `Koperasi sekolah membeli ${b} pak pensil 2B. Jika harga setiap pak adalah Rp${a}, berapa rupiah total uang yang harus dibayarkan koperasi?`,
+            (a, b) => `Seorang peternak memiliki ${b} kolam ikan nila. Setiap kolam ditebari ${a} ekor bibit ikan. Berapa ekor jumlah seluruh bibit ikan nila yang ditebar?`,
+            (a, b) => `Dalam sehari, mesin cetak daerah mampu mencetak ${a} lembar formulir. Berapa lembar formulir yang berhasil dicetak dalam waktu ${b} hari?`,
+            (a, b) => `Setiap keranjang panen berisi ${a} gram kacang mete Wonogiri. Jika terdapat ${b} keranjang penuh, berapa gram total berat kacang mete tersebut?`,
+            (a, b) => `Untuk kegiatan kemah akbar, panitia memesan ${b} paket konsumsi dengan harga Rp${a} per paket. Berapa rupiah total biaya konsumsi yang dikeluarkan?`,
+            (a, b) => `Sebuah gedung perpustakaan memiliki ${b} rak besar. Setiap rak mampu menampung ${a} buku bacaan. Berapa total kapasitas buku di seluruh rak?`,
+            (a, b) => `Pengrajin batik membutuhkan ${a} gram malam (lilin batik) untuk satu gulung kain. Jika ia membuat ${b} gulung kain, berapa gram malam yang dibutuhkan?`,
+            (a, b) => `Setiap bus pariwisata yang berkunjung ke Wonogiri membayar retribusi Rp${a}. Jika hari ini datang ${b} bus, berapa rupiah total retribusi yang diterima?`,
+            (a, b) => `Seorang pedagang grosir memesan ${b} karton mi instan. Setiap karton memiliki berat bersih ${a} gram. Berapa gram total berat seluruh karton?`,
+            (a, b) => `Siswa kelas 6 berlatih lari mengelilingi lapangan sejauh ${a} meter setiap hari. Berapa meter total jarak yang ditempuh siswa selama ${b} hari berlatih?`,
+            (a, b) => `Terdapat ${b} kelompok tani di wilayah Sidoharjo. Setiap kelompok menerima bibit padi sebanyak ${a} gram. Berapa gram total bibit padi yang diterima?`,
+            (a, b) => `Sebuah toko roti memproduksi ${a} potong roti manis setiap hari. Berapa potong roti manis yang dihasilkan toko tersebut selama ${b} hari berturut-turut?`,
+            (a, b) => `Harga sebutir bibit tanaman buah unggul adalah Rp${a}. Jika sekolah membeli ${b} bibit untuk taman sekolah, berapa rupiah total harganya?`,
+            (a, b) => `Setiap truk pengangkut pasir membawa beban seberat ${a} kg. Jika terdapat ${b} truk yang mengirim pasir bersamaan, berapa kg total pasir yang dikirim?`,
+            (a, b) => `Sebuah pabrik konveksi menjahit ${a} kancing baju untuk setiap lusin seragam. Jika memproduksi ${b} lusin seragam, berapa total kancing yang terpakai?`,
+            (a, b) => `Dalam lomba cerdas cermat, setiap jawaban benar pada babak bonus bernilai ${a} poin. Jika regu A menjawab benar ${b} soal, berapa total poinnya?`,
+            (a, b) => `Setiap kaleng cat tembok berisi ${a} ml cat. Untuk mengecat gedung olahraga dibutuhkan ${b} kaleng cat. Berapa ml total volume cat yang digunakan?`,
+            (a, b) => `Seorang pengrajin anyaman bambu di Wonogiri menjual satu keranjang seharga Rp${a}. Jika terjual ${b} keranjang, berapa rupiah uang yang diperoleh?`,
+            (a, b) => `Setiap buku ensiklopedia memiliki ketebalan ${a} halaman. Jika perpustakaan membeli ${b} jilid lengkap, berapa total halaman seluruh ensiklopedia?`,
+            (a, b) => `Pompa air irigasi sawah mampu mengalirkan ${a} liter air setiap menit. Berapa liter air yang dialirkan pompa tersebut selama ${b} menit?`
+        ];
+
+        // 25 Skenario Soal Pembagian Kontekstual
+        const BANK_CERITA_BAGI = [
+            (a, b) => `Sebanyak ${a} ekor bibit ikan nila akan ditebar sama rata ke dalam ${b} kolam warga di Sidoharjo. Berapa ekor bibit ikan di setiap kolam?`,
+            (a, b) => `Panitia membagikan ${a} lembar kertas gambar secara merata kepada ${b} kelompok belajar SD. Berapa lembar kertas yang diterima setiap kelompok?`,
+            (a, b) => `Total hasil penjualan tiket wisata sejumlah Rp${a} berasal dari ${b} rombongan dengan biaya yang sama. Berapa rupiah biaya tiket per rombongan?`,
+            (a, b) => `Gudang logistik mendistribusikan ${a} kg beras bantuan secara merata ke ${b} desa di Kabupaten Wonogiri. Berapa kg beras yang diterima setiap desa?`,
+            (a, b) => `Sebanyak ${a} buku cerita baru akan disusun sama banyak ke dalam ${b} rak perpustakaan sekolah. Berapa buku yang diletakkan pada setiap rak?`,
+            (a, b) => `Pabrik kacang mete mengemas ${a} gram kacang mete ke dalam ${b} toples besar dengan berat sama. Berapa gram isi kacang mete di setiap toples?`,
+            (a, b) => `Dana beasiswa prestasi sebesar Rp${a} diberikan sama rata kepada ${b} siswa berprestasi. Berapa rupiah beasiswa yang diterima masing-masing siswa?`,
+            (a, b) => `Petani memanen ${a} buah jeruk keprok dan memasukkannya sama banyak ke dalam ${b} peti kayu. Berapa buah jeruk di dalam setiap peti kayu?`,
+            (a, b) => `Sebanyak ${a} bibit pohon jati akan ditanam secara merata di ${b} petak lahan perhutani. Berapa bibit pohon yang ditanam pada setiap petak lahan?`,
+            (a, b) => `Seorang pedagang telur mengemas ${a} butir telur ayam ke dalam ${b} kotak penyimpanan sama rata. Berapa butir telur dalam setiap kotak?`,
+            (a, b) => `Untuk membuat seragam olahraga, konveksi membagi ${a} meter kain secara merata kepada ${b} penjahit. Berapa meter kain yang dikerjakan tiap penjahit?`,
+            (a, b) => `Tangki air berkapasitas ${a} liter akan dipindahkan ke dalam ${b} drum penampungan berukuran sama hingga habis. Berapa liter isi setiap drum?`,
+            (a, b) => `Panitia lomba PGRI menyiapkan ${a} buah piala dan medali untuk dibagikan merata ke ${b} cabang perlombaan. Berapa penghargaan di tiap cabang?`,
+            (a, b) => `Sebuah truk mengangkut ${a} buah batu bata yang akan diturunkan sama banyak di ${b} titik pembangunan sekolah. Berapa batu bata di setiap titik?`,
+            (a, b) => `Koperasi membeli ${a} buah pulpen dan mengikatnya menjadi ${b} pak besar dengan isi sama banyak. Berapa buah pulpen dalam setiap pak besar?`,
+            (a, b) => `Seorang pelari maraton menempuh total jarak ${a} meter dalam ${b} sesi latihan dengan jarak tempuh yang selalu sama. Berapa meter jarak tiap sesi?`,
+            (a, b) => `Hasil panen singkong seberat ${a} kg diangkut menggunakan ${b} gerobak dengan muatan sama rata. Berapa kg muatan singkong pada setiap gerobak?`,
+            (a, b) => `Sekolah membayar Rp${a} untuk pembelian ${b} kursi belajar baru dengan harga satuan yang sama. Berapa rupiah harga satu buah kursi belajar?`,
+            (a, b) => `Pabrik roti menghasilkan ${a} bungkus roti tawar yang dikirimkan sama rata ke ${b} toko kelontong di Sidoharjo. Berapa bungkus yang diterima tiap toko?`,
+            (a, b) => `Sebanyak ${a} gram pupuk organik dikemas ke dalam ${b} kantong plastik dengan takaran yang sama persis. Berapa gram berat pupuk tiap kantong?`,
+            (a, b) => `Dalam kegiatan pramuka, sebanyak ${a} peserta dibagi secara merata menjadi ${b} kontingen kecamatan. Berapa jumlah peserta di setiap kontingen?`,
+            (a, b) => `Percetakan mengemas ${a} lembar brosur edukasi ke dalam ${b} amplop besar sama banyak. Berapa lembar brosur di dalam masing-masing amplop?`,
+            (a, b) => `Peternak sapi memerah ${a} ml susu segar dan menuangkannya sama rata ke dalam ${b} botol kaca besar. Berapa ml volume susu di setiap botol?`,
+            (a, b) => `Pengrajin suvenir membuat ${a} gantungan kunci khas Wonogiri dalam waktu ${b} hari dengan jumlah produksi harian tetap. Berapa suvenir dibuat per hari?`,
+            (a, b) => `Bantuan alat tulis berupa ${a} buku gambar dibagikan sama rata kepada ${b} Gugus Sekolah Dasar. Berapa buku gambar yang diterima setiap gugus?`
+        ];
+
+        function generateSingleQuestion(opType, diff, templateIndex) {
+            let actualOp = opType;
+            if (opType === 'campuran') {
+                const ops = ['tambah', 'kurang', 'kali', 'bagi'];
+                actualOp = ops[templateIndex % ops.length];
+            }
+
+            let a, b, answer, expression, story, explanation, category;
+            const maxLimit = diff === 'mudah' ? 40000 : (diff === 'sedang' ? 75000 : 100000);
+            const storyIdx = templateIndex % 25;
+
+            if (actualOp === 'tambah') {
+                category = "PENJUMLAHAN BILANGAN CACAH";
+                a = randomInt(Math.floor(maxLimit * 0.15), Math.floor(maxLimit * 0.55));
+                b = randomInt(Math.floor(maxLimit * 0.15), Math.floor(maxLimit * 0.42));
+                if (diff === 'mudah') {
+                    a = Math.round(a / 50) * 50;
+                    b = Math.round(b / 50) * 50;
+                }
+                answer = a + b;
+                expression = `${formatNumberID(a)} + ${formatNumberID(b)} = ...`;
+                story = BANK_CERITA_TAMBAH[storyIdx](formatNumberID(a), formatNumberID(b));
+                explanation = `Penjumlahan bersusun: ${formatNumberID(a)} + ${formatNumberID(b)} = ${formatNumberID(answer)}.`;
+
+            } else if (actualOp === 'kurang') {
+                category = "PENGURANGAN BILANGAN CACAH";
+                a = randomInt(Math.floor(maxLimit * 0.45), Math.floor(maxLimit * 0.95));
+                b = randomInt(Math.floor(maxLimit * 0.15), a - 2500);
+                if (diff === 'mudah') {
+                    a = Math.round(a / 50) * 50;
+                    b = Math.round(b / 50) * 50;
+                }
+                answer = a - b;
+                expression = `${formatNumberID(a)} − ${formatNumberID(b)} = ...`;
+                story = BANK_CERITA_KURANG[storyIdx](formatNumberID(a), formatNumberID(b));
+                explanation = `Pengurangan bersusun: ${formatNumberID(a)} − ${formatNumberID(b)} = ${formatNumberID(answer)}.`;
+
+            } else if (actualOp === 'kali') {
+                category = "PERKALIAN BILANGAN CACAH";
+                if (diff === 'mudah') {
+                    b = randomInt(12, 25);
+                    a = randomInt(500, 1500);
+                    a = Math.round(a / 50) * 50;
+                } else if (diff === 'sedang') {
+                    b = randomInt(15, 45);
+                    a = randomInt(800, 1600);
+                    a = Math.round(a / 25) * 25;
+                } else {
+                    b = randomInt(24, 75);
+                    a = randomInt(900, Math.floor(98000 / b));
+                }
+                answer = a * b;
+                expression = `${formatNumberID(a)} × ${formatNumberID(b)} = ...`;
+                story = BANK_CERITA_KALI[storyIdx](formatNumberID(a), formatNumberID(b));
+                explanation = `Perkalian bilangan cacah: ${formatNumberID(a)} × ${formatNumberID(b)} = ${formatNumberID(answer)}.`;
+
+            } else {
+                category = "PEMBAGIAN BILANGAN CACAH";
+                if (diff === 'mudah') {
+                    b = randomInt(10, 25);
+                    answer = randomInt(40, 150) * 10;
+                } else if (diff === 'sedang') {
+                    b = randomInt(15, 40);
+                    answer = randomInt(65, 220) * 10;
+                } else {
+                    b = randomInt(25, 65);
+                    answer = randomInt(120, Math.floor(99000 / b));
+                }
+                a = answer * b;
+                expression = `${formatNumberID(a)} ÷ ${formatNumberID(b)} = ...`;
+                story = BANK_CERITA_BAGI[storyIdx](formatNumberID(a), formatNumberID(b));
+                explanation = `Pembagian kebalikan perkalian: ${formatNumberID(a)} ÷ ${formatNumberID(b)} = ${formatNumberID(answer)} (karena ${formatNumberID(answer)} × ${formatNumberID(b)} = ${formatNumberID(a)}).`;
+            }
+
+            // Buat 4 Pilihan Jawaban Unik
+            const optionsSet = new Set([answer]);
+            const offsets = [100, -100, 250, -250, 500, -500, 1000, -1000, 2000, -2000, 10, -10, 50, -50];
+            while (optionsSet.size < 4) {
+                const pickOffset = offsets[randomInt(0, offsets.length - 1)];
+                const fakeAns = answer + pickOffset;
+                if (fakeAns > 0 && fakeAns <= 100000) {
+                    optionsSet.add(fakeAns);
+                }
+            }
+
+            // Acak urutan pilihan A, B, C, D
+            const options = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+            const correctIndex = options.indexOf(answer);
+
+            return {
+                category,
+                story,
+                expression,
+                options,
+                correctIndex,
+                answer,
+                explanation
+            };
+        }
+
+        /**************************************************************
+         * 5. ALUR GAMEPLAY (MULAI, TIMER, JAWAB SOAL, EVALUASI)
+         **************************************************************/
+        async function startGame() {
+            playSound('click');
+            score = 0;
+            // Sesuaikan nyawa agar proporsional dengan banyaknya soal (3 untuk 5/10 soal, 5 untuk 20/25 soal)
+            maxLives = totalQuestionsToPlay >= 20 ? 5 : 3;
+            lives = maxLives;
+            currentQuestionIndex = 0;
+            isPaused = false;
+            evaluationHistory = [];
+
+            // Acak indeks template soal (0..24) agar tidak ada cerita soal yang berulang
+            const templateIndices = Array.from({ length: 25 }, (_, idx) => idx).sort(() => Math.random() - 0.5);
+
+            questionsList = [];
+            for (let i = 0; i < totalQuestionsToPlay; i++) {
+                questionsList.push(generateSingleQuestion(selectedMode, selectedDiff, templateIndices[i % 25]));
+            }
+
+            showScreen('screen-gameplay');
+            updateHUD();
+            loadCurrentQuestion();
+
+            // Aktifkan Kamera Sensor jika diizinkan
+            if (cameraEnabled) {
+                await startCameraSensor();
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-score').textContent = score;
+            document.getElementById('hud-question-num').textContent = `${currentQuestionIndex + 1} / ${totalQuestionsToPlay}`;
+            
+            const livesContainer = document.getElementById('hud-lives');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < maxLives; i++) {
+                const heart = document.createElement('i');
+                heart.className = i < lives ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart text-slate-600';
+                livesContainer.appendChild(heart);
+            }
+        }
+
+        function loadCurrentQuestion() {
+            isAnswering = false;
+            zoneCharge = [0, 0, 0, 0];
+            updateMotionBars();
+
+            const q = questionsList[currentQuestionIndex];
+            document.getElementById('question-category').textContent = q.category;
+            document.getElementById('question-story').textContent = q.story;
+            document.getElementById('question-math').textContent = q.expression;
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`ans-text-${i}`).textContent = formatNumberID(q.options[i]);
+                document.getElementById(`zone-${i}`).classList.remove('motion-active');
+            }
+
+            // Reset & Jalankan Timer (45 detik per soal agar nyaman dihitung siswa kelas 6)
+            clearInterval(timerInterval);
+            timerSeconds = 45;
+            document.getElementById('hud-timer').textContent = `${timerSeconds}d`;
+            timerInterval = setInterval(() => {
+                if (!isPaused && !isAnswering) {
+                    timerSeconds--;
+                    document.getElementById('hud-timer').textContent = `${timerSeconds}d`;
+                    if (timerSeconds <= 0) {
+                        handleTimeOut();
+                    }
+                }
+            }, 1000);
+        }
+
+        function handleTimeOut() {
+            if (isAnswering) return;
+            isAnswering = true;
+            lives--;
+            playSound('wrong');
+
+            const q = questionsList[currentQuestionIndex];
+            evaluationHistory.push({
+                expression: q.expression,
+                userAnswer: "Waktu Habis",
+                correctAnswer: formatNumberID(q.answer),
+                isCorrect: false,
+                explanation: q.explanation
+            });
+
+            showFeedbackOverlay(
+                false,
+                "WAKTU HABIS!",
+                `Jawaban yang tepat adalah ${formatNumberID(q.answer)}. ${q.explanation}`
+            );
+        }
+
+        function handleAnswerSelect(selectedIndex) {
+            if (isAnswering || isPaused) return;
+            isAnswering = true;
+            clearInterval(timerInterval);
+
+            const q = questionsList[currentQuestionIndex];
+            const isCorrect = (selectedIndex === q.correctIndex);
+            const chosenValue = formatNumberID(q.options[selectedIndex]);
+            const pointsPerQuestion = Math.round(100 / totalQuestionsToPlay);
+
+            if (isCorrect) {
+                score += pointsPerQuestion;
+                playSound('correct');
+            } else {
+                lives--;
+                playSound('wrong');
+            }
+
+            evaluationHistory.push({
+                expression: q.expression,
+                userAnswer: chosenValue,
+                correctAnswer: formatNumberID(q.answer),
+                isCorrect: isCorrect,
+                explanation: q.explanation
+            });
+
+            updateHUD();
+
+            showFeedbackOverlay(
+                isCorrect,
+                isCorrect ? `HEBAT! JAWABANMU BENAR! (+${pointsPerQuestion} Poin)` : "YAH, KURANG TEPAT!",
+                isCorrect ? q.explanation : `Kamu memilih ${chosenValue}. Jawaban yang benar adalah ${formatNumberID(q.answer)}.`
+            );
+        }
+
+        function showFeedbackOverlay(isCorrect, title, desc) {
+            const overlay = document.getElementById('feedback-overlay');
+            const iconBox = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const descEl = document.getElementById('feedback-desc');
+
+            overlay.classList.remove('hidden');
+            if (isCorrect) {
+                iconBox.className = 'w-20 h-20 rounded-full flex items-center justify-center text-5xl mb-3 shadow-2xl bg-emerald-500 text-slate-950';
+                iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
+                titleEl.className = 'text-2xl sm:text-4xl font-title font-extrabold mb-2 text-emerald-400';
+            } else {
+                iconBox.className = 'w-20 h-20 rounded-full flex items-center justify-center text-5xl mb-3 shadow-2xl bg-rose-500 text-white';
+                iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                titleEl.className = 'text-2xl sm:text-4xl font-title font-extrabold mb-2 text-rose-400';
+            }
+            titleEl.textContent = title;
+            descEl.textContent = desc;
+
+            clearTimeout(feedbackTimeout);
+            feedbackTimeout = setTimeout(() => {
+                proceedNextQuestion();
+            }, 2200);
+        }
+
+        function proceedNextQuestion() {
+            clearTimeout(feedbackTimeout);
+            const overlay = document.getElementById('feedback-overlay');
+            if (overlay.classList.contains('hidden')) return;
+            overlay.classList.add('hidden');
+
+            if (lives <= 0 || currentQuestionIndex >= totalQuestionsToPlay - 1) {
+                finishGame();
+            } else {
+                currentQuestionIndex++;
+                updateHUD();
+                loadCurrentQuestion();
+            }
+        }
+
+        function togglePauseGame() {
+            playSound('click');
+            isPaused = !isPaused;
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (isPaused) {
+                pauseOverlay.classList.remove('hidden');
+            } else {
+                pauseOverlay.classList.add('hidden');
+            }
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            clearTimeout(feedbackTimeout);
+            stopMotionDetection();
+            playSound('victory');
+            showScreen('screen-result');
+
+            const correctCount = evaluationHistory.filter(e => e.isCorrect).length;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-correct').textContent = `${correctCount} / ${totalQuestionsToPlay}`;
+            document.getElementById('final-lives').textContent = `${Math.max(0, lives)} ❤️`;
+
+            // Tentukan Bintang & Judul Apresiasi
+            const badge = document.getElementById('result-badge');
+            const title = document.getElementById('result-title');
+            const starsBox = document.getElementById('result-stars');
+
+            let starCount = 1;
+            if (score >= 80 && lives > 0) {
+                starCount = 3;
+                badge.textContent = "VICTORY • BINTANG SEMPURNA!";
+                title.textContent = "LUAR BIASA, JUARA MATEMATIKA!";
+            } else if (score >= 40 && lives > 0) {
+                starCount = 2;
+                badge.textContent = "MISI SELESAI • KERJA BAGUS!";
+                title.textContent = "HEBAT! TERUS TINGKATKAN!";
+            } else {
+                starCount = 1;
+                badge.textContent = lives <= 0 ? "GAME OVER • JANGAN MENYERAH!" : "MISI SELESAI • AYO BERLATIH LAGI!";
+                title.textContent = "TETAP SEMANGAT BELAJAR!";
+            }
+
+            starsBox.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const star = document.createElement('i');
+                star.className = i < starCount ? 'fa-solid fa-star text-amber-400 animate-bounce' : 'fa-regular fa-star text-slate-600';
+                starsBox.appendChild(star);
+            }
+
+            // Render Daftar Evaluasi Pembahasan
+            const evalContainer = document.getElementById('evaluation-list');
+            evalContainer.innerHTML = '';
+            evaluationHistory.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = `p-3 rounded-xl border ${item.isCorrect ? 'bg-emerald-950/50 border-emerald-500/40' : 'bg-rose-950/50 border-rose-500/40'}`;
+                row.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                        <span class="font-title font-bold text-white">Soal ${idx + 1}: ${item.expression}</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${item.isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'}">
+                            ${item.isCorrect ? '✓ Benar' : '✗ Kurang Tepat'}
+                        </span>
+                    </div>
+                    <p class="text-slate-300">Jawabanmu: <strong>${item.userAnswer}</strong> | Kunci Jawaban: <strong class="text-amber-300">${item.correctAnswer}</strong></p>
+                    <p class="text-cyan-300 text-xs mt-1"><i class="fa-solid fa-lightbulb mr-1"></i> ${item.explanation}</p>
+                `;
+                evalContainer.appendChild(row);
+            });
+        }
+
+        /**************************************************************
+         * 6. SISTEM SENSOR GERAK TANGAN KAMERA (WEBCAM MOTION SENSOR)
+         **************************************************************/
+        async function startCameraSensor() {
+            const video = document.getElementById('webcam-video');
+            const hint = document.getElementById('sensor-status-hint');
+
+            try {
+                if (!cameraStream) {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: 320, height: 240 },
+                        audio: false
+                    });
+                }
+                video.srcObject = cameraStream;
+                await video.play();
+                hint.innerHTML = '<i class="fa-solid fa-hand-sparkles text-emerald-400"></i> <span>Sensor Kamera Aktif! Lambaikan tangan pada kotak A, B, C, atau D (atau sentuh langsung).</span>';
+                startMotionLoop();
+            } catch (err) {
+                // Jika perangkat tidak memiliki kamera atau izin ditolak, otomatis berjalan mulus dalam mode Sentuh/Papan Interaktif
+                hint.innerHTML = '<i class="fa-solid fa-hand-pointer text-amber-400"></i> <span>Mode Sentuh/Klik Aktif: Sentuh langsung kotak jawaban A, B, C, atau D di layar!</span>';
+            }
+        }
+
+        function stopMotionDetection() {
+            if (motionLoopId) {
+                cancelAnimationFrame(motionLoopId);
+                motionLoopId = null;
+            }
+            prevFrameData = null;
+        }
+
+        function toggleCameraSensor() {
+            playSound('click');
+            cameraEnabled = !cameraEnabled;
+            const icon = document.getElementById('cam-icon');
+            const text = document.getElementById('cam-text');
+            const btn = document.getElementById('btn-toggle-cam');
+            const video = document.getElementById('webcam-video');
+
+            if (cameraEnabled) {
+                icon.className = 'fa-solid fa-video';
+                text.textContent = 'Sensor Kamera: Aktif';
+                btn.classList.replace('bg-slate-700', 'bg-indigo-600');
+                video.classList.remove('hidden');
+                if (!document.getElementById('screen-gameplay').classList.contains('hidden')) {
+                    startCameraSensor();
+                }
+            } else {
+                icon.className = 'fa-solid fa-video-slash';
+                text.textContent = 'Sensor Kamera: Nonaktif';
+                btn.classList.replace('bg-indigo-600', 'bg-slate-700');
+                video.classList.add('hidden');
+                stopMotionDetection();
+                zoneCharge = [0, 0, 0, 0];
+                updateMotionBars();
+            }
+        }
+
+        function startMotionLoop() {
+            stopMotionDetection();
+            const video = document.getElementById('webcam-video');
+            const mCanvas = document.getElementById('motion-canvas');
+            const mCtx = mCanvas.getContext('2d', { willReadFrequently: true });
+            const vCanvas = document.getElementById('visual-canvas');
+            const vCtx = vCanvas.getContext('2d');
+
+            // Koordinat 4 Zona Sudut (A: Kiri Atas, B: Kanan Atas, C: Kiri Bawah, D: Kanan Bawah) pada resolusi 160x120
+            const zones = [
+                { id: 0, xMin: 0,   xMax: 65,  yMin: 0,  yMax: 45 }, // Zona A
+                { id: 1, xMin: 95,  xMax: 160, yMin: 0,  yMax: 45 }, // Zona B
+                { id: 2, xMin: 0,   xMax: 65,  yMin: 75, yMax: 120 }, // Zona C
+                { id: 3, xMin: 95,  xMax: 160, yMin: 75, yMax: 120 }  // Zona D
+            ];
+
+            function detectFrame() {
+                if (!cameraEnabled || isPaused || isAnswering) {
+                    motionLoopId = requestAnimationFrame(detectFrame);
+                    return;
+                }
+
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    // Gambar frame video secara mirror ke canvas 160x120
+                    mCtx.save();
+                    mCtx.scale(-1, 1);
+                    mCtx.drawImage(video, -160, 0, 160, 120);
+                    mCtx.restore();
+
+                    const currentFrame = mCtx.getImageData(0, 0, 160, 120);
+                    const data = currentFrame.data;
+
+                    // Sesuaikan ukuran visual canvas
+                    if (vCanvas.width !== vCanvas.clientWidth || vCanvas.height !== vCanvas.clientHeight) {
+                        vCanvas.width = vCanvas.clientWidth;
+                        vCanvas.height = vCanvas.clientHeight;
+                    }
+                    vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+
+                    if (prevFrameData) {
+                        let motionCount = [0, 0, 0, 0];
+
+                        // Periksa perubahan piksel pada setiap zona
+                        for (let z = 0; z < zones.length; z++) {
+                            const zone = zones[z];
+                            for (let y = zone.yMin; y < zone.yMax; y += 2) {
+                                for (let x = zone.xMin; x < zone.xMax; x += 2) {
+                                    const idx = (y * 160 + x) * 4;
+                                    const rDiff = Math.abs(data[idx] - prevFrameData[idx]);
+                                    const gDiff = Math.abs(data[idx + 1] - prevFrameData[idx + 1]);
+                                    const bDiff = Math.abs(data[idx + 2] - prevFrameData[idx + 2]);
+
+                                    if (rDiff + gDiff + bDiff > 95) {
+                                        motionCount[z]++;
+                                        // Gambar partikel kilau sensor pada titik gerakan tangan
+                                        const vx = (x / 160) * vCanvas.width;
+                                        const vy = (y / 120) * vCanvas.height;
+                                        vCtx.fillStyle = 'rgba(250, 204, 21, 0.55)';
+                                        vCtx.beginPath();
+                                        vCtx.arc(vx, vy, 4, 0, Math.PI * 2);
+                                        vCtx.fill();
+                                    }
+                                }
+                            }
+
+                            // Jika gerakan tangan cukup kuat di zona ini, tambahkan charge
+                            if (motionCount[z] > 28) {
+                                zoneCharge[z] = Math.min(100, zoneCharge[z] + 8);
+                                document.getElementById(`zone-${z}`).classList.add('motion-active');
+                            } else {
+                                zoneCharge[z] = Math.max(0, zoneCharge[z] - 4);
+                                if (zoneCharge[z] < 20) {
+                                    document.getElementById(`zone-${z}`).classList.remove('motion-active');
+                                }
+                            }
+                        }
+
+                        updateMotionBars();
+
+                        // Cek apakah salah satu zona mencapai 100%
+                        for (let z = 0; z < 4; z++) {
+                            if (zoneCharge[z] >= 100) {
+                                handleAnswerSelect(z);
+                                break;
+                            }
+                        }
+                    }
+
+                    prevFrameData = new Uint8ClampedArray(data);
+                }
+
+                motionLoopId = requestAnimationFrame(detectFrame);
+            }
+
+            motionLoopId = requestAnimationFrame(detectFrame);
+        }
+
+        function updateMotionBars() {
+            for (let i = 0; i < 4; i++) {
+                const bar = document.getElementById(`motion-bar-${i}`);
+                if (bar) {
+                    bar.style.width = `${zoneCharge[i]}%`;
+                }
+            }
+        }
+
+        /**************************************************************
+         * 7. DUKUNGAN KEYBOARD UNTUK LAPTOP & PAPAN INTERAKTIF
+         **************************************************************/
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('screen-gameplay').classList.contains('hidden')) return;
+            const key = e.key.toUpperCase();
+            if (key === 'A' || key === '1') handleAnswerSelect(0);
+            if (key === 'B' || key === '2') handleAnswerSelect(1);
+            if (key === 'C' || key === '3') handleAnswerSelect(2);
+            if (key === 'D' || key === '4') handleAnswerSelect(3);
+            if (key === ' ') togglePauseGame();
+        });
+    </script>
+</body>
+</html>
